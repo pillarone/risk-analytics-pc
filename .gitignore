@@ -1,0 +1,8 @@
+dist/*
+target/*
+out/*
+*.log
+.idea/*
+*.iml
+*.zip
+cobertura.ser

@@ -41,4 +41,19 @@ class PatternPacket extends Packet {
 
         return dateFactors;
     }
+
+    public List<DateFactors> getDateFactorsOfCurrentPeriod(DateTime occurrenceDate, DateTime fromIncluded, DateTime toExcluded) {
+        List<DateFactors> dateFactors = new ArrayList<DateFactors>();       //      todo(sku): avoid looping through complete pattern
+        for (int devPeriod = 0; devPeriod < cumulativeValues.size(); devPeriod++) {
+            DateTime date = occurrenceDate.plus(cumulativePeriods.get(devPeriod));
+            if (devPeriod == 0 && date.isAfter(occurrenceDate) && !(date.isBefore(fromIncluded)) && date.isBefore(toExcluded)) {
+                dateFactors.add(new DateFactors(occurrenceDate, 0));
+            }
+            if (!(date.isBefore(fromIncluded)) && date.isBefore(toExcluded)) {
+                dateFactors.add(new DateFactors(date, cumulativeValues.get(devPeriod)));
+            }
+        }
+
+        return dateFactors;
+    }
 }

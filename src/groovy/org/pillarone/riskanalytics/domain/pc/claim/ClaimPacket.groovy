@@ -1,213 +1,147 @@
 package org.pillarone.riskanalytics.domain.pc.claim
 
-import com.google.common.collect.ImmutableList
-import com.google.common.collect.SortedSetMultimap
-import com.google.common.collect.TreeMultimap
 import groovy.transform.CompileStatic
 import org.apache.commons.lang.NotImplementedException
+import org.apache.commons.logging.Log
+import org.apache.commons.logging.LogFactory
 import org.joda.time.DateTime
 import org.pillarone.riskanalytics.core.components.IComponentMarker
-import org.pillarone.riskanalytics.core.packets.Packet
-import org.pillarone.riskanalytics.core.simulation.engine.PeriodScope
-import org.pillarone.riskanalytics.domain.pc.event.IEvent
-import org.pillarone.riskanalytics.domain.pc.indexing.FactorsPacket
+import org.pillarone.riskanalytics.domain.pc.accounting.CashFlow
+import org.pillarone.riskanalytics.domain.pc.accounting.CashFlowContainer
+import org.pillarone.riskanalytics.domain.pc.accounting.CashFlowType
+import org.pillarone.riskanalytics.domain.pc.accounting.ICashflow
 import org.pillarone.riskanalytics.domain.pc.pattern.DateFactors
 import org.pillarone.riskanalytics.domain.pc.pattern.PatternPacket
 import org.pillarone.riskanalytics.domain.pc.util.SignTag
-import org.pillarone.riskanalytics.domain.utils.datetime.DateTimeUtilities
 import org.pillarone.riskanalytics.domain.utils.marker.IPerilMarker
-import org.pillarone.riskanalytics.domain.utils.marker.IReinsuranceContractMarker
-import org.pillarone.riskanalytics.domain.utils.marker.ISegmentMarker
 
 /**
  * @author stefan (dot) kunz (at) intuitive-collaboration (dot) com
  */
 // todo: think merging within R/I programs
 @CompileStatic
-class ClaimPacket extends Packet {
+class ClaimPacket extends AbstractClaimPacket implements IClaimPacket {
 
-    private final double initial
-    private final DateTime occurrenceDate
-    private final DateTime inceptionDate
-    private final ClaimType claimType
-    private final IEvent event
-    private final IPerilMarker peril
+    private static Log LOG = LogFactory.getLog(ClaimPacket);
 
-    private final PatternPacket reportingPattern
-    private final PatternPacket payoutPattern
+    private Map<IComponentMarker, CashFlowContainer> claimsGross = [:]
+    private Map<IComponentMarker, CashFlowContainer> claimsCeded = [:]
 
-    private final FactorsPacket severityIndex
-    private final FactorsPacket runOffIndex
-
-
-    private final PeriodScope periodScope
-    private int lastInitializedPeriod = Integer.MIN_VALUE
-
-    private SortedSetMultimap<IComponentMarker, IClaim> claimsGross = TreeMultimap.create()
-    private SortedSetMultimap<IComponentMarker, IClaim> claimsCeded = TreeMultimap.create()
-    private SortedSetMultimap<IComponentMarker, IClaim> claimsNet = TreeMultimap.create()
-
-
-    ClaimPacket(double initial, PeriodScope periodScope, DateTime occurrenceDate, ClaimType claimType, IPerilMarker peril,
+    ClaimPacket(double initial, DateTime occurrenceDate, ClaimType claimType, IPerilMarker peril,
                 PatternPacket payoutPattern = null, PatternPacket reportingPattern = null) {
-        this.initial = initial
-        this.periodScope = periodScope
-        this.occurrenceDate = occurrenceDate
-        this.claimType = claimType
-        this.peril = peril
-        this.payoutPattern = payoutPattern
-        this.reportingPattern = reportingPattern
+        super(initial, occurrenceDate, claimType, peril, payoutPattern, reportingPattern)
     }
-
-    /**
-     *  Adds a new IClaim object to claimsGross of component peril using the implementation matching the arguments
-     *  provided in the c'tor. This function needs to be queried by any member function before accessing the claimsGross.
-     */
-    private void initPeriod() {
-        if (periodScope.currentPeriod > lastInitializedPeriod) {
-            lastInitializedPeriod = periodScope.currentPeriod
-            if (reportingPattern == null && payoutPattern == null && severityIndex == null && runOffIndex == null) {
-                if (periodScope.periodCounter.belongsToCurrentPeriod(occurrenceDate)) {
-                    add(new UltimateClaimModelling(peril, initial, occurrenceDate), SignTag.GROSS)
-                }
-            }
-            else if (reportingPattern == null && payoutPattern != null && severityIndex == null && runOffIndex == null) {
-                for (DateFactors dateFactors : payoutPattern.getDateFactorsOfCurrentPeriod(occurrenceDate, periodScope.periodCounter)) {
-                    add(new PaidClaimModelling(peril, initial, dateFactors.date, dateFactors.factor * initial), SignTag.GROSS)
-                }
-            }
-            else if (reportingPattern != null && payoutPattern != null && severityIndex == null && runOffIndex == null) {
-                // todo(sku): extend possible use cases (different pattern lenghts, different dates)
-                List<DateFactors> payoutDateFactors = payoutPattern.getDateFactorsOfCurrentPeriod(occurrenceDate, periodScope.periodCounter)
-                List<DateFactors> reportingDateFactors = reportingPattern.getDateFactorsOfCurrentPeriod(occurrenceDate, periodScope.periodCounter)
-                if (payoutDateFactors.size() != reportingDateFactors.size()) {
-                    throw new NotImplementedException('implementation currently restricted to patterns of same length')
-                }
-                for (int i = 0; i < payoutDateFactors.size(); i++) {
-                    DateFactors payout = payoutDateFactors[i]
-                    DateFactors reporting = reportingDateFactors[i]
-                    DateTime payoutDate = payout.date
-                    DateTime reportedDate = reporting.date
-                    if (!(payoutDate.equals(reportedDate))) {
-                        throw new NotImplementedException('implementation currently restricted to updates on same date')
-                    }
-                    Double paid = payout.factor * initial
-                    Double reported = reporting.factor * initial
-                    add(new ReportedClaimModelling(peril, initial, payoutDate, paid, reported), SignTag.GROSS)
-                }
-            }
-        }
-    }
-
-    /**
+/**
      * make sure lists are filled by sorting IClaim objects by update date
      * @param claim
      * @param signTag
      */
-    void add(IClaim claim, SignTag signTag) {
+    void add(ICashflow claim, SignTag signTag) {
         switch (signTag) {
             case SignTag.GROSS:
-                claimsGross.put(claim.origin(), claim)
+                CashFlowContainer container = claimsGross.get(claim.origin())
+                if (!container) {
+                    container = new CashFlowContainer()
+                    claimsGross.put(claim.origin(), container)
+                }
+                container.add(claim)
                 break;
             case SignTag.CEDED:
-                claimsCeded.put(claim.origin(), claim)
+                CashFlowContainer container = claimsCeded.get(claim.origin())
+                if (!container) {
+                    container = new CashFlowContainer()
+                    claimsCeded.put(claim.origin(), container)
+                }
+                container.add(claim)
                 break;
             case SignTag.NET:
-                claimsNet.put(claim.origin(), claim)
+                LOG.debug("adding net is not supported as these figures are calculated based on persisted gross and ceded")
                 break;
             default:
                 throw new NotImplementedException("unknown signTag: $signTag")
         }
     }
 
-    // IDEA: get rid of periodScope and apply patterns according to an additionally provided date
-    double value(IComponentMarker component, ClaimProperty claimProperty, SignTag signTag) {
-        initPeriod()
+    @Override
+    Double valueCumulatedAt(IComponentMarker component, CashFlowType claimProperty, SignTag signTag, DateTime evaluationDate) {
+        return cashFlowCumulatedAt(component, claimProperty, signTag, evaluationDate).amount()
+    }
+
+    @Override
+    ICashflow cashFlowCumulatedAt(IComponentMarker component, CashFlowType claimProperty, SignTag signTag, DateTime evaluationDate) {
+        updateInternalStructure(evaluationDate)
         switch (signTag) {
             case SignTag.GROSS:
-                return cumulatedValue(claimsGross.get(component), claimProperty)
+                return claimsGross[component].valueCumulatedAt(claimProperty, evaluationDate)
             case SignTag.CEDED:
-                return cumulatedValue(claimsCeded.get(component), claimProperty)
+                return claimsCeded[component].valueCumulatedAt(claimProperty, evaluationDate)
             case SignTag.NET:
-                return cumulatedValue(claimsNet.get(component), claimProperty)
+                ICashflow gross = claimsGross[component].valueCumulatedAt(claimProperty, evaluationDate)
+                ICashflow ceded = claimsCeded[component].valueCumulatedAt(claimProperty, evaluationDate)
+                return new CashFlow(gross.date(), gross.origin(), gross.cashFlowType(), gross.amount() - ceded.amount())
             default:
                 throw new NotImplementedException("unknown mode: $signTag")
         }
     }
 
-    double value(IComponentMarker component, ClaimProperty claimProperty, SignTag signTag, PeriodScope periodScope) {
-        initPeriod()
-        return value(component, signTag, periodScope.currentPeriodStartDate, periodScope.nextPeriodStartDate, claimProperty)
+    private DateTime lastInternalUpdate = new DateTime(1900,1,1,0,0,0,0)
+    private void updateInternalStructure(DateTime dateTime) {
+        if (dateTime.isAfter(lastInternalUpdate)) {
+            if (claimsGross.isEmpty()) {
+                add(new CashFlow(root.occurrenceDate(), root.peril(), CashFlowType.CLAIM_TOTAL, root.initial()), SignTag.GROSS)
+                if (!(root.hasIBNR())) {
+                    add(new CashFlow(root.occurrenceDate(), root.peril(), CashFlowType.CLAIM_REPORTED, root.initial()), SignTag.GROSS)
+                }
+                if (!(root.hasPayouts())) {
+                    add(new CashFlow(root.occurrenceDate(), root.peril(), CashFlowType.CLAIM_PAID, root.initial()), SignTag.GROSS)
+                }
+            }
+            if (root.hasPayouts()) {
+                for (DateFactors dateFactors : root.payoutPattern().getDateFactorsOfCurrentPeriod(root.occurrenceDate(), lastInternalUpdate, dateTime)) {
+                    add(new CashFlow(dateFactors.date, root.peril(), CashFlowType.CLAIM_PAID, dateFactors.factor * root.initial()), SignTag.GROSS)
+                }
+            }
+            if (root.hasIBNR()) {
+                for (DateFactors dateFactors : root.reportingPattern().getDateFactorsOfCurrentPeriod(root.occurrenceDate(), lastInternalUpdate, dateTime)) {
+                    add(new CashFlow(dateFactors.date, root.peril(), CashFlowType.CLAIM_REPORTED, dateFactors.factor * root.initial()), SignTag.GROSS)
+                }
+            }
+        }
+        lastInternalUpdate = dateTime
     }
 
-    double value(IComponentMarker component, SignTag signTag, DateTime fromIncluding, DateTime toExcluded, ClaimProperty claimProperty) {
-        initPeriod()
+    @Override
+    List<ICashflow> cashFlowsCumulated(IComponentMarker component, CashFlowType claimProperty, SignTag signTag, DateTime fromIncluding, DateTime toExcluded) {
+        updateInternalStructure(toExcluded)
         switch (signTag) {
             case SignTag.GROSS:
-                return incrementValue(claimsGross.get(component), claimProperty, fromIncluding, toExcluded)
+                return claimsGross[component].valuesCumulated(claimProperty, fromIncluding, toExcluded)
             case SignTag.CEDED:
-                return incrementValue(claimsCeded.get(component), claimProperty, fromIncluding, toExcluded)
+                return claimsCeded[component].valuesCumulated(claimProperty, fromIncluding, toExcluded)
             case SignTag.NET:
-                return incrementValue(claimsNet.get(component), claimProperty, fromIncluding, toExcluded)
+                List<ICashflow> gross = claimsGross[component].valuesCumulated(claimProperty, fromIncluding, toExcluded)
+                List<ICashflow> ceded = claimsCeded[component].valuesCumulated(claimProperty, fromIncluding, toExcluded)
+                throw new NotImplementedException("not yet implemented for net case")
             default:
                 throw new NotImplementedException("unknown mode: $signTag")
         }
     }
 
-    /**
-     * @param claims need to be sorted by updateDate
-     * @param fromIncluding needs to be before the toExcluded date
-     * @param toExcluded
-     * @return
-     */
-    private double incrementValue(SortedSet<IClaim> claims, ClaimProperty claimProperty, DateTime fromIncluding, DateTime toExcluded) {
-        Double fromValue = null
-        Double toValue = null
-        for (IClaim claim : claims.toList().reverse()) {
-            if (toValue && !fromValue && claim.updateDate().isBefore(fromIncluding)) {
-                fromValue = claimProperty.value(claim)
-            }
-            if (toValue == null && claim.updateDate().isBefore(toExcluded)) {
-                toValue = claimProperty.value(claim)
-            }
+    @Override
+    List<ICashflow> cashFlowsIncremental(IComponentMarker component, CashFlowType claimProperty, SignTag signTag, DateTime fromIncluding, DateTime toExcluded) {
+        updateInternalStructure(toExcluded)
+        switch (signTag) {
+            case SignTag.GROSS:
+                return claimsGross[component].valuesIncremental(claimProperty, fromIncluding, toExcluded)
+            case SignTag.CEDED:
+                return claimsCeded[component].valuesIncremental(claimProperty, fromIncluding, toExcluded)
+            case SignTag.NET:
+                List<ICashflow> gross = claimsGross[component].valuesIncremental(claimProperty, fromIncluding, toExcluded)
+                List<ICashflow> ceded = claimsCeded[component].valuesIncremental(claimProperty, fromIncluding, toExcluded)
+                throw new NotImplementedException("not yet implemented for net case")
+            default:
+                throw new NotImplementedException("unknown mode: $signTag")
         }
-        if (DateTimeUtilities.isBetweenOrEqualStart(fromIncluding, toExcluded, occurrenceDate)) {
-            return toValue == null ? fromValue : toValue
-        }
-        if (toValue && fromValue) {
-            return toValue - fromValue
-        }
-        else if (fromValue) {
-            return fromValue
-        }
-        return 0
     }
 
-    /**
-     *
-     * @param claims need to be sorted by updateDate
-     * @param claimProperty
-     * @return
-     */
-    private static double cumulatedValue(SortedSet<IClaim> claims, ClaimProperty claimProperty) {
-        if (!claims || claims.toList().empty) return 0
-        return claimProperty.value(claims.toList()[-1])
-    }
-
-
-    ImmutableList<ISegmentMarker> segment() {
-        throw new NotImplementedException()
-    }
-
-    IPerilMarker peril() {
-        peril
-    }
-
-    ImmutableList<IReinsuranceContractMarker> contracts() {
-        throw new NotImplementedException()
-    }
-
-    ImmutableList<IComponentMarker> marker(IComponentMarker marker) {
-        throw new NotImplementedException()
-    }
 }

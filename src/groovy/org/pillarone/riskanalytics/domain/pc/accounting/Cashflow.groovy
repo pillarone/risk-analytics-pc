@@ -22,6 +22,13 @@ class CashFlow implements ICashflow, Comparable {
         this.amount = amount
     }
 
+    CashFlow(ICashflow cashflow, IComponentMarker origin, double amount) {
+        updateDate = cashflow.date()
+        this.origin = origin
+        account = cashflow.cashFlowType()
+        this.amount = amount
+    }
+
     @Override
     IComponentMarker origin() {
         origin
@@ -49,12 +56,12 @@ class CashFlow implements ICashflow, Comparable {
 
 
     @Override
-    public java.lang.String toString() {
+    public String toString() {
         return "CashFlow{" +
             "updateDate=" + updateDate +
+            ", amount=" + amount +
             ", origin=" + origin +
             ", account=" + account +
-            ", amount=" + amount +
             '}';
     }
 }

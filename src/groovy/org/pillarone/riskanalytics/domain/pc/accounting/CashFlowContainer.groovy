@@ -6,6 +6,8 @@ import groovy.transform.CompileStatic
 import org.joda.time.DateTime
 
 /**
+ * Keeps cashflow sorted by date
+ *
  * @author stefan (dot) kunz (at) intuitive-collaboration (dot) com
  */
 @CompileStatic

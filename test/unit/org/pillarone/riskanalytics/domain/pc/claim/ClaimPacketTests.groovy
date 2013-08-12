@@ -25,6 +25,9 @@ class ClaimPacketTests extends GroovyTestCase {
     @Test
     void usageUltimate() {
         ClaimPacket claim = new ClaimPacket(1000, date20130101, ClaimType.ATTRITIONAL, peril)
+        assert claim.nonTrivial(CashFlowType.CLAIM_TOTAL)
+        assert !(claim.nonTrivial(CashFlowType.CLAIM_REPORTED))
+        assert !(claim.nonTrivial(CashFlowType.CLAIM_PAID))
         assert 1000d == claim.valueCumulatedAt(peril, CashFlowType.CLAIM_TOTAL, SignTag.GROSS, periodScope.nextPeriodStartDate)
         assert 1000d == claim.valueCumulatedAt(peril, CashFlowType.CLAIM_PAID, SignTag.GROSS, periodScope.nextPeriodStartDate)
         assert 1000d == claim.valueCumulatedAt(peril, CashFlowType.CLAIM_REPORTED, SignTag.GROSS, periodScope.nextPeriodStartDate)
@@ -65,6 +68,9 @@ class ClaimPacketTests extends GroovyTestCase {
     void usagePaid() {
         PatternPacket payoutPattern = new PatternPacket([0.8d, 0.95d, 1d], [Period.months(2), Period.months(12), Period.months(30)])
         ClaimPacket claim = new ClaimPacket(1000, date20130101, ClaimType.ATTRITIONAL, peril, payoutPattern)
+        assert claim.nonTrivial(CashFlowType.CLAIM_TOTAL)
+        assert !(claim.nonTrivial(CashFlowType.CLAIM_REPORTED))
+        assert claim.nonTrivial(CashFlowType.CLAIM_PAID)
         assert 1000 == claim.valueCumulatedAt(peril, CashFlowType.CLAIM_TOTAL, SignTag.GROSS, periodScope.nextPeriodStartDate)
         assert [1000] == claim.cashFlowsIncremental(peril, CashFlowType.CLAIM_TOTAL, SignTag.GROSS, periodScope.currentPeriodStartDate, periodScope.nextPeriodStartDate)*.amount()
         assert 800 == claim.valueCumulatedAt(peril, CashFlowType.CLAIM_PAID, SignTag.GROSS, periodScope.nextPeriodStartDate)
@@ -106,6 +112,9 @@ class ClaimPacketTests extends GroovyTestCase {
         PatternPacket reportingPattern = new PatternPacket([0.9d, 1d, 1d], [Period.months(0), Period.months(12), Period.months(30)])
         PatternPacket payoutPattern = new PatternPacket([0.8d, 0.95d, 1d], [Period.months(2), Period.months(12), Period.months(30)])
         ClaimPacket claim = new ClaimPacket(1000, date20130101, ClaimType.ATTRITIONAL, peril, payoutPattern, reportingPattern)
+        assert claim.nonTrivial(CashFlowType.CLAIM_TOTAL)
+        assert claim.nonTrivial(CashFlowType.CLAIM_REPORTED)
+        assert claim.nonTrivial(CashFlowType.CLAIM_PAID)
         assert 1000 == claim.valueCumulatedAt(peril, CashFlowType.CLAIM_TOTAL, SignTag.GROSS, periodScope.nextPeriodStartDate)
         assert [1000] == claim.cashFlowsIncremental(peril, CashFlowType.CLAIM_TOTAL, SignTag.GROSS, periodScope.currentPeriodStartDate, periodScope.nextPeriodStartDate)*.amount()
         assert 800 == claim.valueCumulatedAt(peril, CashFlowType.CLAIM_PAID, SignTag.GROSS, periodScope.nextPeriodStartDate)

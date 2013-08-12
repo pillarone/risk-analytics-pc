@@ -35,4 +35,9 @@ class ReportedClaimModelling extends PaidClaimModelling implements IClaim {
     double reserves() {
         reported() - paid()
     }
+
+    @Override
+    public String toString() {
+        return "ReportedClaimModelling{ultimate= $ultimate, reported= $reported, paid= $paid, updateDate= $updateDate}"
+    }
 }

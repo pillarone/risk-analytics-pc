@@ -31,7 +31,8 @@ class ClaimPacket extends AbstractClaimPacket implements IClaimPacket {
                 PatternPacket payoutPattern = null, PatternPacket reportingPattern = null) {
         super(initial, occurrenceDate, claimType, peril, payoutPattern, reportingPattern)
     }
-/**
+
+    /**
      * make sure lists are filled by sorting IClaim objects by update date
      * @param claim
      * @param signTag
@@ -62,8 +63,15 @@ class ClaimPacket extends AbstractClaimPacket implements IClaimPacket {
         }
     }
 
+    void addAll(Collection<ICashflow> claims, SignTag signTag) {
+        for (ICashflow claim: claims) {
+            add(claim, signTag)
+        }
+    }
+
     @Override
     Double valueCumulatedAt(IComponentMarker component, CashFlowType claimProperty, SignTag signTag, DateTime evaluationDate) {
+        updateInternalStructure(evaluationDate)
         return cashFlowCumulatedAt(component, claimProperty, signTag, evaluationDate).amount()
     }
 
@@ -110,14 +118,30 @@ class ClaimPacket extends AbstractClaimPacket implements IClaimPacket {
         lastInternalUpdate = dateTime
     }
 
+    public boolean nonTrivial(CashFlowType cashFlowType) {
+        if (cashFlowType.equals(CashFlowType.CLAIM_TOTAL)) {
+            return true
+        }
+        else if (cashFlowType.equals(CashFlowType.CLAIM_PAID) && root.hasPayouts()) {
+            return true
+        }
+        else if (cashFlowType.equals(CashFlowType.CLAIM_REPORTED) && root.hasIBNR()) {
+            return true
+        }
+        return false
+    }
+
     @Override
     List<ICashflow> cashFlowsCumulated(IComponentMarker component, CashFlowType claimProperty, SignTag signTag, DateTime fromIncluding, DateTime toExcluded) {
         updateInternalStructure(toExcluded)
+        List<ICashflow> cashflows = []
         switch (signTag) {
             case SignTag.GROSS:
-                return claimsGross[component].valuesCumulated(claimProperty, fromIncluding, toExcluded)
+                cashflows.addAll claimsGross[component].valuesCumulated(claimProperty, fromIncluding, toExcluded)
+                break
             case SignTag.CEDED:
-                return claimsCeded[component].valuesCumulated(claimProperty, fromIncluding, toExcluded)
+                cashflows.addAll claimsCeded[component].valuesCumulated(claimProperty, fromIncluding, toExcluded)
+                break
             case SignTag.NET:
                 List<ICashflow> gross = claimsGross[component].valuesCumulated(claimProperty, fromIncluding, toExcluded)
                 List<ICashflow> ceded = claimsCeded[component].valuesCumulated(claimProperty, fromIncluding, toExcluded)
@@ -125,6 +149,7 @@ class ClaimPacket extends AbstractClaimPacket implements IClaimPacket {
             default:
                 throw new NotImplementedException("unknown mode: $signTag")
         }
+        return cashflows
     }
 
     @Override

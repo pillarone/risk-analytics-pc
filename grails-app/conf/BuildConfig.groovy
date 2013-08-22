@@ -1,7 +1,7 @@
 //grails.project.class.dir = "target/classes"
 //grails.project.test.class.dir = "target/test-classes"
 //grails.project.test.reports.dir = "target/test-reports"
-grails.project.plugins.dir = "../local-plugins/risk-analytics-pc"
+grails.project.plugins.dir = "../local-plugins/risk-analytics-pc-master"
 
 grails.project.dependency.resolution = {
     // inherit Grails' default dependencies

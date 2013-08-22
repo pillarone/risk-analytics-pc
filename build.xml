@@ -1,6 +1,7 @@
 <project name="risk-analytics-pc" default="cruise">
 
 
+    <property name="GRAILS_JVM_OPTS" value="-Xmx1024m -XX:MaxPermSize=256m -Duser.language='en'" />
     <property file="application.properties"/>
 
     <copy tofile="_build.xml" overwrite="true">

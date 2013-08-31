@@ -1,13 +1,12 @@
-package org.pillarone.riskanalytics.domain.pc.claim
+package org.pillarone.riskanalytics.domain.pc.claim;
 
-import org.joda.time.DateTime
-import org.pillarone.riskanalytics.core.components.IComponentMarker
-import org.pillarone.riskanalytics.domain.pc.util.ChangeMode
-import org.pillarone.riskanalytics.domain.pc.util.Mode
+import org.joda.time.DateTime;
+import org.pillarone.riskanalytics.core.components.IComponentMarker;
 
 /**
  * @author stefan (dot) kunz (at) intuitive-collaboration (dot) com
  */
+// todo(sku): depending on collector strategies additional methods returning IComponentMarker information are required
 public interface IClaim extends Comparable {
 
     IComponentMarker origin();

@@ -93,6 +93,11 @@ class ClaimPacket extends AbstractClaimPacket implements IClaimPacket {
     }
 
     private DateTime lastInternalUpdate = new DateTime(1900,1,1,0,0,0,0)
+    /**
+     * Fills claimsGross and claimsCeded according to patterns to make sure the can provide the correct information at
+     * dateTime. This function needs to be call first and always when any cash-flow information of this object is queried.
+     * @param dateTime
+     */
     private void updateInternalStructure(DateTime dateTime) {
         if (dateTime.isAfter(lastInternalUpdate)) {
             if (claimsGross.isEmpty()) {
@@ -118,6 +123,11 @@ class ClaimPacket extends AbstractClaimPacket implements IClaimPacket {
         lastInternalUpdate = dateTime
     }
 
+    /**
+     * Check for matching cashFlowType
+     * @param cashFlowType
+     * @return false if cashFlowType does not match available patterns
+     */
     public boolean nonTrivial(CashFlowType cashFlowType) {
         if (cashFlowType.equals(CashFlowType.CLAIM_TOTAL)) {
             return true
@@ -132,7 +142,8 @@ class ClaimPacket extends AbstractClaimPacket implements IClaimPacket {
     }
 
     @Override
-    List<ICashflow> cashFlowsCumulated(IComponentMarker component, CashFlowType claimProperty, SignTag signTag, DateTime fromIncluding, DateTime toExcluded) {
+    List<ICashflow> cashFlowsCumulated(IComponentMarker component, CashFlowType claimProperty, SignTag signTag,
+                                       DateTime fromIncluding, DateTime toExcluded) {
         updateInternalStructure(toExcluded)
         List<ICashflow> cashflows = []
         switch (signTag) {
@@ -153,7 +164,8 @@ class ClaimPacket extends AbstractClaimPacket implements IClaimPacket {
     }
 
     @Override
-    List<ICashflow> cashFlowsIncremental(IComponentMarker component, CashFlowType claimProperty, SignTag signTag, DateTime fromIncluding, DateTime toExcluded) {
+    List<ICashflow> cashFlowsIncremental(IComponentMarker component, CashFlowType claimProperty, SignTag signTag,
+                                         DateTime fromIncluding, DateTime toExcluded) {
         updateInternalStructure(toExcluded)
         switch (signTag) {
             case SignTag.GROSS:

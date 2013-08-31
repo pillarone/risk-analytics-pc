@@ -20,6 +20,12 @@ import org.pillarone.riskanalytics.domain.utils.marker.IReinsuranceContractMarke
 import org.pillarone.riskanalytics.domain.utils.marker.ISegmentMarker
 
 /**
+ * This object exists after creation for the whole iteration.
+ *
+ * Idea for ocmponent implementation: This object is passed in its creation period through the model
+ * graph. Components adding information, keep it in their period store to enable updates in following periods. By
+ * keeping objects in the period store resending and filtering in every period can be avoided.
+ *
  * @author stefan (dot) kunz (at) intuitive-collaboration (dot) com
  */
 // todo: think merging within R/I programs
@@ -49,13 +55,6 @@ abstract class AbstractClaimPacket extends Packet implements IClaimPacket {
                 return new PaidClaimModelling(component, ultimate, evaluationDate, paid)
             }
         }
-    }
-
-    List<IClaim> claimsCumulated(IComponentMarker component, SignTag signTag, DateTime fromIncluding, DateTime toExcluded) {
-        throw new NotImplementedException()
-    }
-
-    List<IClaim> claimsIncremental(IComponentMarker component, SignTag signTag, DateTime fromIncluding, DateTime toExcluded) {
         throw new NotImplementedException()
     }
 

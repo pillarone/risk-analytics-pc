@@ -12,16 +12,16 @@ import org.pillarone.riskanalytics.domain.pc.util.SignTag
 /**
  * @author stefan (dot) kunz (at) intuitive-collaboration (dot) com
  */
-class BaseReinsuranceContractTests extends GroovyTestCase {
+class BaseReinsuranceContractComponentTests extends GroovyTestCase {
 
     DateTime date20130101 = new DateTime(2013,1,1,0,0,0,0)
     PeriodScope periodScope = new PeriodScope(periodCounter: new ContinuousPeriodCounter(date20130101, Period.years(1)))
     TestComponent peril = new TestComponent()
-    BaseReinsuranceContract contract
+    BaseReinsuranceContractComponent contract
 
     @Override
     protected void setUp() throws Exception {
-        contract = new BaseReinsuranceContract(periodScope: periodScope, coveredComponent: peril,
+        contract = new BaseReinsuranceContractComponent(periodScope: periodScope, coveredComponent: peril,
             parmContractStrategy: ReinsuranceContractType.getStrategy(ReinsuranceContractType.QUOTASHARE, [quotaShare: 0.2d]))
     }
 

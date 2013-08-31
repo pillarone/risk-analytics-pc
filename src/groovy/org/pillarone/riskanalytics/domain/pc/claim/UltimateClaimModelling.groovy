@@ -4,12 +4,14 @@ import groovy.transform.CompileStatic
 import org.apache.commons.lang.NotImplementedException
 import org.joda.time.DateTime
 import org.pillarone.riskanalytics.core.components.IComponentMarker
+import org.pillarone.riskanalytics.core.packets.MultiValuePacket
 
 /**
+ * This is a helper class for persisting values. For calculation purposes use AbstractClaimPacket.
  * @author stefan (dot) kunz (at) intuitive-collaboration (dot) com
  */
 @CompileStatic
-class UltimateClaimModelling implements IClaim {
+class UltimateClaimModelling extends MultiValuePacket implements IClaim {
 
     protected final IComponentMarker origin
     protected final double ultimate

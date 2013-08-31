@@ -1,6 +1,5 @@
 package org.pillarone.riskanalytics.domain.pc.reinsurance.contract
 
-import groovy.transform.CompileStatic
 import org.apache.commons.logging.Log
 import org.apache.commons.logging.LogFactory
 import org.pillarone.riskanalytics.core.components.Component
@@ -17,9 +16,9 @@ import org.pillarone.riskanalytics.domain.utils.marker.IReinsuranceContractMarke
  * @author stefan (dot) kunz (at) intuitive-collaboration (dot) com
  */
 //@CompileStatic
-class BaseReinsuranceContract extends Component implements IReinsuranceContractMarker {
+class BaseReinsuranceContractComponent extends Component implements IReinsuranceContractMarker {
 
-    private static Log LOG = LogFactory.getLog(BaseReinsuranceContract)
+    private static Log LOG = LogFactory.getLog(BaseReinsuranceContractComponent)
 
     PeriodScope periodScope
 
@@ -32,6 +31,7 @@ class BaseReinsuranceContract extends Component implements IReinsuranceContractM
     IReinsuranceContractStrategy parmContractStrategy = ReinsuranceContractType.getDefault()
     private IComponentMarker coveredComponent   // this needs to be filled according to parmCover
 
+    /** This set is kept within one iteration and extended by every covered period as claims are sent once only through the model. */
     private Set<ClaimPacket> coveredClaims = new HashSet<ClaimPacket>()
     private List<IReinsuranceContract> contracts
 
@@ -43,6 +43,9 @@ class BaseReinsuranceContract extends Component implements IReinsuranceContractM
         fillOutChannels()
     }
 
+    /**
+     * This implementation assumes that total, paid and reported figures are calculated independently of each other
+     */
     void calculateCededClaims() {
         for (IReinsuranceContract contract : contracts) {
             for (ClaimPacket claim : coveredClaims) {

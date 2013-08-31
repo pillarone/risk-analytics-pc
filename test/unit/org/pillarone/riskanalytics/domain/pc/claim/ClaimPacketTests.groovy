@@ -15,6 +15,7 @@ import org.pillarone.riskanalytics.domain.utils.marker.IPerilMarker
  * @author stefan (dot) kunz (at) intuitive-collaboration (dot) com
  */
 // todo(sku): reuse corresponding spreadsheet test of pc-cashflow plugin
+// todo(sku): two cf at same date
 //@CompileStatic
 class ClaimPacketTests extends GroovyTestCase {
 

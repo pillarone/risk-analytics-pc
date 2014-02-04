@@ -1,3 +1,14 @@
+import org.pillarone.riskanalytics.core.parameterization.ConstraintsFactory
+import org.pillarone.riskanalytics.domain.pc.indexing.IndexSelectionTableConstraints
+import org.pillarone.riskanalytics.domain.pc.indexing.RunOffIndexSelectionTableConstraints
+import org.pillarone.riskanalytics.domain.pc.indexing.SeverityIndexSelectionTableConstraints
+import org.pillarone.riskanalytics.domain.pc.pattern.PatternTableConstraints
+import org.pillarone.riskanalytics.domain.utils.constraint.DateTimeConstraints
+import org.pillarone.riskanalytics.domain.utils.constraint.DoubleConstraints
+import org.pillarone.riskanalytics.domain.utils.constraint.ReinsuranceContractBasedOn
+import org.pillarone.riskanalytics.domain.utils.constraint.ReinsuranceContractContraints
+import org.pillarone.riskanalytics.domain.utils.constraint.SegmentPortion
+
 class RiskAnalyticsPcGrailsPlugin {
     // the plugin version
     def version = "0.1"
@@ -52,7 +63,15 @@ Brief summary/description of the plugin.
     }
 
     def doWithApplicationContext = { applicationContext ->
-        // TODO Implement post initialization spring config (optional)
+        ConstraintsFactory.registerConstraint(new SeverityIndexSelectionTableConstraints())
+        ConstraintsFactory.registerConstraint(new RunOffIndexSelectionTableConstraints())
+        ConstraintsFactory.registerConstraint(new PatternTableConstraints())
+        ConstraintsFactory.registerConstraint(new DoubleConstraints())
+        ConstraintsFactory.registerConstraint(new DateTimeConstraints())
+        ConstraintsFactory.registerConstraint(new SegmentPortion())
+        ConstraintsFactory.registerConstraint(new ReinsuranceContractContraints())
+        ConstraintsFactory.registerConstraint(new ReinsuranceContractBasedOn())
+        ConstraintsFactory.registerConstraint(new IndexSelectionTableConstraints())
     }
 
     def onChange = { event ->

@@ -27,9 +27,14 @@ class ClaimPacket extends AbstractClaimPacket implements IClaimPacket {
     private Map<IComponentMarker, CashFlowContainer> claimsGross = [:]
     private Map<IComponentMarker, CashFlowContainer> claimsCeded = [:]
 
+    ClaimPacket() {
+    }
+
     ClaimPacket(double initial, DateTime occurrenceDate, ClaimType claimType, IPerilMarker peril,
                 PatternPacket payoutPattern = null, PatternPacket reportingPattern = null) {
         super(initial, occurrenceDate, claimType, peril, payoutPattern, reportingPattern)
+//        updateInternalStructure(occurrenceDate);
+        // todo: performance improvement idea: if patterns can't be modified, call updateInternalStructure in order to fully develop the claim right at the beginning
     }
 
     /**
@@ -94,8 +99,9 @@ class ClaimPacket extends AbstractClaimPacket implements IClaimPacket {
 
     private DateTime lastInternalUpdate = new DateTime(1900,1,1,0,0,0,0)
     /**
-     * Fills claimsGross and claimsCeded according to patterns to make sure the can provide the correct information at
-     * dateTime. This function needs to be call first and always when any cash-flow information of this object is queried.
+     * Fills claimsGross and claimsCeded according to patterns to make sure the internal structures can provide the correct
+     * information at dateTime. This function needs to be call first and always when any cash-flow information of this
+     * object is queried.
      * @param dateTime
      */
     private void updateInternalStructure(DateTime dateTime) {

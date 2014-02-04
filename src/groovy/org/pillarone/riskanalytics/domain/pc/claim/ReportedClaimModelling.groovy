@@ -12,6 +12,9 @@ class ReportedClaimModelling extends PaidClaimModelling implements IClaim {
 
     protected final double reported
 
+    ReportedClaimModelling() {
+    }
+
     ReportedClaimModelling(IComponentMarker origin, double ultimate, DateTime updateDate, double paid) {
         super(origin, ultimate, updateDate, paid)
     }

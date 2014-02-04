@@ -9,6 +9,7 @@ import org.pillarone.riskanalytics.core.simulation.engine.PeriodScope
 import org.pillarone.riskanalytics.domain.pc.accounting.CashFlowType
 import org.pillarone.riskanalytics.domain.pc.accounting.ICashflow
 import org.pillarone.riskanalytics.domain.pc.claim.ClaimPacket
+import org.pillarone.riskanalytics.domain.pc.claim.ReportedClaimModelling
 import org.pillarone.riskanalytics.domain.pc.util.SignTag
 import org.pillarone.riskanalytics.domain.utils.marker.IReinsuranceContractMarker
 
@@ -27,6 +28,9 @@ class BaseReinsuranceContractComponent extends Component implements IReinsurance
     /** Contains gross claims covered in the current periods according to their time and cover filter. This includes
      *  gross claims for which there is no cover left or no cover available as the counter party has gone default. */
     PacketList<ClaimPacket> outClaims = new PacketList<ClaimPacket>(ClaimPacket)
+    PacketList<ReportedClaimModelling> outClaimsGross = new PacketList<ReportedClaimModelling>(ReportedClaimModelling)
+    PacketList<ReportedClaimModelling> outClaimsCeded = new PacketList<ReportedClaimModelling>(ReportedClaimModelling)
+    PacketList<ReportedClaimModelling> outClaimsNet = new PacketList<ReportedClaimModelling>(ReportedClaimModelling)
 
     IReinsuranceContractStrategy parmContractStrategy = ReinsuranceContractType.getDefault()
     private IComponentMarker coveredComponent   // this needs to be filled according to parmCover
@@ -73,6 +77,12 @@ class BaseReinsuranceContractComponent extends Component implements IReinsurance
 
     void fillOutChannels() {
         outClaims.addAll(coveredClaims)
+        for (ClaimPacket claim : coveredClaims) {
+            // not working as no gross reference is set so far
+//            outClaimsGross << claim.claimCumulated(this, SignTag.GROSS, periodScope.nextPeriodStartDate.minusDays(1))
+            outClaimsCeded << claim.claimCumulated(this, SignTag.CEDED, periodScope.nextPeriodStartDate.minusDays(1))
+//            outClaimsNet << claim.claimCumulated(this, SignTag.NET, periodScope.nextPeriodStartDate.minusDays(1))
+        }
     }
 
     @Override

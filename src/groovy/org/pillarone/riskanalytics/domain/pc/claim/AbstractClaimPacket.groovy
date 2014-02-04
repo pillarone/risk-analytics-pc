@@ -22,7 +22,7 @@ import org.pillarone.riskanalytics.domain.utils.marker.ISegmentMarker
 /**
  * This object exists after creation for the whole iteration.
  *
- * Idea for ocmponent implementation: This object is passed in its creation period through the model
+ * Idea for component implementation: This object is passed in its creation period through the model
  * graph. Components adding information, keep it in their period store to enable updates in following periods. By
  * keeping objects in the period store resending and filtering in every period can be avoided.
  *
@@ -34,16 +34,20 @@ abstract class AbstractClaimPacket extends Packet implements IClaimPacket {
 
     protected final IClaimRoot root
 
+    AbstractClaimPacket() {
+    }
     AbstractClaimPacket(double initial, DateTime occurrenceDate, ClaimType claimType, IPerilMarker peril,
                 PatternPacket payoutPattern = null, PatternPacket reportingPattern = null) {
         root = new ClaimRoot(initial, occurrenceDate, occurrenceDate, claimType, peril, null, reportingPattern, payoutPattern)
     }
 
+    // todo: return specific types once https://issuetracking.intuitive-collaboration.com/jira/browse/PMO-2495 is resolved
     @Override
     IClaim claimCumulated(IComponentMarker component, SignTag signTag, DateTime evaluationDate) {
         double ultimate = valueCumulatedAt(component, CashFlowType.CLAIM_TOTAL, signTag, evaluationDate)
         if (!(root.hasPayouts()) && !(root.hasIBNR())) {
-            return new UltimateClaimModelling(component, ultimate, evaluationDate)
+//            return new UltimateClaimModelling(component, ultimate, evaluationDate)
+            return new ReportedClaimModelling(component, ultimate, evaluationDate, ultimate, ultimate)
         }
         else if (root.hasPayouts()) {
             double paid = valueCumulatedAt(component, CashFlowType.CLAIM_PAID, signTag, evaluationDate)
@@ -52,7 +56,8 @@ abstract class AbstractClaimPacket extends Packet implements IClaimPacket {
                 return new ReportedClaimModelling(component, ultimate, evaluationDate, paid, reported)
             }
             else {
-                return new PaidClaimModelling(component, ultimate, evaluationDate, paid)
+//                return new PaidClaimModelling(component, ultimate, evaluationDate, paid)
+                return new ReportedClaimModelling(component, ultimate, evaluationDate, paid, ultimate)
             }
         }
         throw new NotImplementedException()

@@ -15,7 +15,7 @@ import org.pillarone.riskanalytics.domain.utils.marker.IReinsuranceContractMarke
 @CompileStatic
 class QuotaShareContractStrategy extends AbstractParameterObject implements IReinsuranceContractStrategy {
 
-    private double quotaShare
+    private Double quotaShare
 //    private ILossParticipationStrategy lossParticipation
 //    private ILimitStrategy limit
 //    private ICommissionStrategy commission
@@ -24,13 +24,13 @@ class QuotaShareContractStrategy extends AbstractParameterObject implements IRei
      * required as we need to share the loss carried forward among different instances */
 //    private DoubleValuePerPeriod lossCarriedForward
 
-    public ReinsuranceContractType getType() {
-        return ReinsuranceContractType.QUOTASHARE
+    ReinsuranceContractType getType() {
+        ReinsuranceContractType.QUOTASHARE
     }
 
-    public Map getParameters() {
+    Map getParameters() {
         [
-            QUOTASHARE: quotaShare,
+            (QUOTASHARE.toString()): quotaShare,
 //            LOSSPARTICIPATION: lossParticipation,
 //            LIMIT: limit,
 //            COMMISSION: commission
@@ -43,13 +43,13 @@ class QuotaShareContractStrategy extends AbstractParameterObject implements IRei
     }
 
 
-    public double termDeductible() { 0d }
-    public double termLimit() { 0d }
+    double termDeductible() { 0d }
+    double termLimit() { 0d }
 
-    public static final String QUOTASHARE = "quotaShare"
-    public static final String LOSSPARTICIPATION = "lossParticipation"
-    public static final String LIMIT = "limit"
-    public static final String COMMISSION = "commission"
+    static final String QUOTASHARE = "quotaShare"
+    static final String LOSSPARTICIPATION = "lossParticipation"
+    static final String LIMIT = "limit"
+    static final String COMMISSION = "commission"
 
 
 }

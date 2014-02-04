@@ -48,7 +48,8 @@ class BaseReinsuranceContractComponentTests extends GroovyTestCase {
 
         ArrayList<IClaim> cededClaims = contract.outClaims*.claimCumulated(contract, SignTag.CEDED, periodScope.nextPeriodStartDate)
         println cededClaims
-        assert [PaidClaimModelling.class] * 2 == cededClaims*.class
+//        assert [PaidClaimModelling.class] * 2 == cededClaims*.class
+        assert [ReportedClaimModelling.class] * 2 == cededClaims*.class
         assert cededClaims*.total().containsAll([200d, 160d])
         assert cededClaims*.paid().containsAll([160d, 128d])
 
@@ -57,7 +58,8 @@ class BaseReinsuranceContractComponentTests extends GroovyTestCase {
         contract.doCalculation()
         cededClaims = contract.outClaims*.claimCumulated(contract, SignTag.CEDED, periodScope.nextPeriodStartDate)
         println cededClaims
-        assert [PaidClaimModelling.class] * 2 == cededClaims*.class
+//        assert [PaidClaimModelling.class] * 2 == cededClaims*.class
+        assert [ReportedClaimModelling.class] * 2 == cededClaims*.class
         assert cededClaims*.total().containsAll([200d, 160d])
         assert cededClaims*.paid().containsAll([190d, 152d])
 
@@ -66,7 +68,8 @@ class BaseReinsuranceContractComponentTests extends GroovyTestCase {
         contract.doCalculation()
         cededClaims = contract.outClaims*.claimCumulated(contract, SignTag.CEDED, periodScope.nextPeriodStartDate)
         println cededClaims
-        assert [PaidClaimModelling.class] * 2 == cededClaims*.class
+//        assert [PaidClaimModelling.class] * 2 == cededClaims*.class
+        assert [ReportedClaimModelling.class] * 2 == cededClaims*.class
         assert cededClaims*.total().containsAll([200d, 160d])
         assert cededClaims*.paid().containsAll([200d, 160d])
     }

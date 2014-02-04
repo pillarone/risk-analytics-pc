@@ -12,6 +12,9 @@ class PaidClaimModelling extends UltimateClaimModelling implements IClaim {
 
     protected final double paid
 
+    PaidClaimModelling() {
+    }
+
     PaidClaimModelling(IComponentMarker origin, double ultimate, DateTime updateDate) {
         super(origin, ultimate, updateDate)
     }

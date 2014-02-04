@@ -46,7 +46,7 @@ class ReinsuranceContractType extends AbstractParameterObjectClassifier {
     static IReinsuranceContractStrategy getStrategy(ReinsuranceContractType type, Map parameters) {
         switch (type) {
             case ReinsuranceContractType.QUOTASHARE:
-                return new QuotaShareContractStrategy(quotaShare: (double) parameters[QuotaShareContractStrategy.QUOTASHARE])
+                return new QuotaShareContractStrategy(quotaShare: (Double) parameters[QuotaShareContractStrategy.QUOTASHARE])
             default: throw new IllegalArgumentException("$type is not implemented")
         }
     }

@@ -17,6 +17,9 @@ class UltimateClaimModelling extends MultiValuePacket implements IClaim {
     protected final double ultimate
     protected final DateTime updateDate
 
+    UltimateClaimModelling() {
+    }
+
     UltimateClaimModelling(IComponentMarker origin, double ultimate, DateTime updateDate) {
         this.origin = origin
         this.ultimate = ultimate
